@@ -8,7 +8,11 @@
 # And to download efficientnet-b3, run:
 #   ./download.sh efficientnet-b3
 
-MODEL=$1
-wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/${MODEL}.tar.gz
+TYPE=$1
+MODEL=$2
+mkdir -p ${TYPE}
+pushd ${TYPE}
+wget https://storage.googleapis.com/cloud-tpu-checkpoints/efficientnet/${TYPE}/${MODEL}.tar.gz
 tar xvf ${MODEL}.tar.gz
 rm ${MODEL}.tar.gz
+popd

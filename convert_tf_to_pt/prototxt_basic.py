@@ -66,7 +66,8 @@ def Convolution(txt_file, info):
     txt_file.write('    pad: %s\n' % 0)  # TODO
   else:
     #print(info['attrs']['pad'])
-    txt_file.write('    pad: %s\n'          % info['attrs']['pad'].split('(')[1].split(',')[0]) # TODO
+    pad = int(float(info['attrs']['pad'].split('(')[1].split(',')[0]))
+    txt_file.write('    pad: %s\n'        % pad) # TODO
 
   if "num_group" in info['attrs']:
     txt_file.write('    group: %s\n'        % info['attrs']['num_group'])
@@ -112,21 +113,38 @@ def BatchNorm(txt_file, info):
 
 
 def Activation(txt_file, info):
-  txt_file.write('layer {\n')
-  txt_file.write('  bottom: "%s"\n'       % info['bottom'][0])
-  txt_file.write('  top: "%s"\n'          % info['top'])
-  txt_file.write('  name: "%s"\n'         % info['top'])
-  if info['attrs']['act_type'] == 'sigmoid':   # TODO
-    txt_file.write('  type: "Sigmoid"\n')
-  elif info['attrs']['act_type'] == 'relu':
-    txt_file.write('  type: "ReLU" \n')
-  elif info['attrs']['act_type'] == 'swish':
-    txt_file.write('  type: "Swish" \n')
+  if info['attrs']['act_type'] == 'swish':
+    txt_file.write('layer {\n')
+    txt_file.write('  bottom: "%s"\n'       % info['bottom'][0])
+    txt_file.write('  top: "%s_sigmoid"\n'          % info['top'])
+    txt_file.write('  name: "%s_sigmoid"\n'         % info['top'])
+    txt_file.write('  type: "Sigmoid" \n')
+    txt_file.write('}\n')
+    txt_file.write('\n')
+    txt_file.write('layer {\n')
+    txt_file.write('  bottom: "%s"\n'       % info['bottom'][0])
+    txt_file.write('  bottom: "%s_sigmoid"\n'       % info['top'])
+    txt_file.write('  top: "%s"\n'          % info['top'])
+    txt_file.write('  name: "%s"\n'         % info['top'])
+    txt_file.write('  type: "Eltwise" \n')
+    txt_file.write('  eltwise_param{\n')
+    txt_file.write('    operation: PROD\n')
+    txt_file.write('  }\n')
+    txt_file.write('}\n')
+    txt_file.write('\n')
   else:
-    logging.info("Unknown avtivate_function %s" % info['attrs']['act_type'])
-    
-  txt_file.write('}\n')
-  txt_file.write('\n')
+    txt_file.write('layer {\n')
+    txt_file.write('  bottom: "%s"\n'       % info['bottom'][0])
+    txt_file.write('  top: "%s"\n'          % info['top'])
+    txt_file.write('  name: "%s"\n'         % info['top'])
+    if info['attrs']['act_type'] == 'sigmoid':   # TODO
+      txt_file.write('  type: "Sigmoid"\n')
+    elif info['attrs']['act_type'] == 'relu':
+      txt_file.write('  type: "ReLU" \n')
+    else:
+      logging.info("Unknown avtivate_function %s" % info['attrs']['act_type'])
+    txt_file.write('}\n')
+    txt_file.write('\n')
   pass
 
 def Concat(txt_file, info):
@@ -312,12 +330,28 @@ def Reshape(txt_file,info):
 
 
 def broadcast_mul(txt_file,info):
+  if len(info['bottom']) > 1:
+    for bottom_i in info['bottom'][1:]:
+      txt_file.write('layer {\n')
+      txt_file.write('  bottom: "%s"\n' % bottom_i)
+      txt_file.write('  name: "%s_flatten"\n' % (info['top'] + "_" + bottom_i))
+      txt_file.write('  type: "Flatten"\n')
+      txt_file.write('  top: "%s_flatten"\n' % (info['top'] + "_" + bottom_i))
+      txt_file.write('}\n')
+      txt_file.write('\n')
   txt_file.write('layer {\n')
   txt_file.write('  name: "%s"\n'         % info['top'])
-  txt_file.write('  type: "BroadcastMul"\n')
-  for bottom_i in info['bottom']:
-    txt_file.write('  bottom: "%s"\n'     % bottom_i)
+#  txt_file.write('  type: "BroadcastMul"\n')
+  txt_file.write('  type: "Scale"\n')
+  txt_file.write('  bottom: "%s"\n'     % info['bottom'][0])
+  if len(info['bottom']) > 1:
+    for bottom_i in info['bottom'][1:]:
+      txt_file.write('  bottom: "%s_flatten"\n' % (info['top'] + "_" + bottom_i))
   txt_file.write('  top: "%s"\n'          % info['top'])
+  txt_file.write('  scale_param {\n')
+  txt_file.write('    axis: 0  \n')
+  txt_file.write('    bias_term: false  \n')
+  txt_file.write('  }\n')
   txt_file.write('}\n')
   txt_file.write('\n')
 

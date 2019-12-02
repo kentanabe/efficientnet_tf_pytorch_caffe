@@ -223,8 +223,8 @@ url_map = {
     'efficientnet-b5': 'http://storage.googleapis.com/public-models/efficientnet-b5-586e6cc6.pth',
 }
 
-def load_pretrained_weights(model, model_name):
+def load_pretrained_weights(model, type_name, model_name):
     """ Loads pretrained weights, and downloads if loading for the first time. """
-    state_dict = torch.load("../pretrained_pytorch/" + model_name + ".pth")#model_zoo.load_url(url_map[model_name])
+    state_dict = torch.load("../pretrained_pytorch/" + type_name + "/" + model_name + ".pth")#model_zoo.load_url(url_map[model_name])
     model.load_state_dict(state_dict)
     print('Loaded pretrained weights for {}'.format(model_name))

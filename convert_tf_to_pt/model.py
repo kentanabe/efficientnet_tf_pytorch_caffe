@@ -19,7 +19,7 @@ class MBConvBlock(nn.Module):
 
     def __init__(self, block_args, global_params,insize,drop_rate = None):
         super(MBConvBlock,self).__init__()
-        print(block_args)
+#        print(block_args)
         self._block_args = block_args
         self._bn_mom = 1 - global_params.batch_norm_momentum
         self._bn_eps = global_params.batch_norm_epsilon
@@ -70,7 +70,7 @@ class MBConvBlock(nn.Module):
         input_filters, output_filters = self._block_args.input_filters, self._block_args.output_filters
         self.drop = drop_rate != None
         self.id_skip = self.id_skip and self._block_args.stride[0] == 1 and input_filters == output_filters
-        print(self.drop,self.id_skip)
+#        print(self.drop,self.id_skip)
         if self.drop and self.id_skip:
             self.dropout = torch.nn.Dropout2d(drop_rate/bsize)
         if self.id_skip:
@@ -216,9 +216,9 @@ def get_from_name(model_name, override_params=None):
     blocks_args, global_params = get_model_params(model_name, override_params)
     return EfficientNet(blocks_args, global_params)
 
-def get_from_pretrained(model_name):
+def get_from_pretrained(type_name, model_name, model_path):
     model = get_from_name(model_name)
-    load_pretrained_weights(model, model_name)
+    load_pretrained_weights(model, type_name, model_name)
     return model
 
 def get_image_size(cls, model_name):

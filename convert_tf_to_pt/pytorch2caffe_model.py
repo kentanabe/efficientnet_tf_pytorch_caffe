@@ -5,18 +5,19 @@ import caffe
 import numpy as np
 from torch.utils import model_zoo
 
-if not len(sys.argv) == 2:
+if not len(sys.argv) == 3:
   sys.exit("too less argc : model name is needed! -> efficientnet-b0/efficientnet-b1/efficientnet-b2/efficientnet-b3")
 
-model_name = sys.argv[1]
+type_name = sys.argv[1]
+model_name = sys.argv[2]
 
-dict = torch.load("../pretrained_pytorch/" + model_name + ".pth")
-model = caffe.Net("caffemodel/" + model_name + ".prototxt",caffe.TEST)
+dict = torch.load("../pretrained_pytorch/" + type_name + "/" + model_name + ".pth")
+model = caffe.Net("../caffemodel/" + type_name + "/" + model_name + ".prototxt",caffe.TEST)
 
 for kv in model.params:
-  print kv
+  print(kv)
 for k,v in dict.items():
-  print k,v.numpy().shape
+  print(k,v.numpy().shape)
 
 for k,v in dict.items():
   #batch normalization
@@ -68,7 +69,7 @@ for k,v in dict.items():
     else:
       print(k," parammeters parser error!")
 
-model.save("caffemodel/" + model_name + ".caffemodel")
+model.save("../caffemodel/" + type_name + "/" + model_name + ".caffemodel")
 #for kv in model.params:
 #  print kv
 

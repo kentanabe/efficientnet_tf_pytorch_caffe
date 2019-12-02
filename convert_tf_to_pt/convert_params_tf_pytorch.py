@@ -283,14 +283,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Convert TF model to PyTorch model and save for easier future loading, \
         python3 convert_params_tf_pytorch.py --model_name efficientnet-b0 \
-        --tf_checkpoint ../pretrained_tensorflow/efficientnet-b0/ \
-        --output_file ../pretrained_pytorch/efficientnet-b0.pth')
+        --tf_checkpoint ../pretrained_tensorflow/ckptsaug/efficientnet-b0/ \
+        --output_file ../pretrained_pytorch/ckptsaug/efficientnet-b0.pth')
 
     parser.add_argument('--model_name', type=str, default='efficientnet-b0',
                         help='efficientnet-b{N}, where N is an integer 0 <= N <= 7')
-    parser.add_argument('--tf_checkpoint', type=str, default='../pretrained_tensorflow/efficientnet-b0/',
+    parser.add_argument('--tf_checkpoint', type=str, default='../pretrained_tensorflow/ckptsaug/efficientnet-b0/',
                         help='checkpoint file path')
-    parser.add_argument('--output_file', type=str, default='../pretrained_pytorch/efficientnet-b0.pth',
+    parser.add_argument('--output_file', type=str, default='../pretrained_pytorch/ckptsaug/efficientnet-b0.pth',
                         help='output PyTorch model file name')
     args = parser.parse_args()
 

@@ -6,11 +6,12 @@ import os
 import sys
 from model_caffe import *
 
-if not len(sys.argv) == 2:
+if not len(sys.argv) == 3:
   sys.exit("too less argc : model name is needed! -> efficientnet-b0/efficientnet-b1/efficientnet-b2/efficientnet-b3")
 
-model_name = sys.argv[1]
-model = get_from_name(model_name) #from_pretrained("efficientnet-b0")#torch.load("efficientnet-b0")
+type_name = sys.argv[1]
+model_name = sys.argv[2]
+model = get_from_name(type_name, model_name) #from_pretrained("efficientnet-b0")#torch.load("efficientnet-b0")
 model.cpu()
 model.eval()
 print(model)

@@ -155,7 +155,7 @@ class MBConvBlock(nn.Module):
         # Output phase
         final_oup = self._block_args.output_filters
         if self.has_se:
-		    bottom = caffe_attr[0] + "._broadcast_mul"
+            bottom = caffe_attr[0] + "._broadcast_mul"
         else:
             bottom = caffe_attr[0] + "._swish1"
 
@@ -227,7 +227,7 @@ class EfficientNet(nn.Module):
         model = EfficientNet.from_pretrained('efficientnet-b0')
 
     """
-    def __init__(self, blocks_args=None, global_params=None, model_name = "efficientnet-b0"):
+    def __init__(self, blocks_args=None, global_params=None, typename="ckptsaug", model_name = "efficientnet-b0"):
         super(EfficientNet,self).__init__()
         assert isinstance(blocks_args, list), 'blocks_args should be a list'
         assert len(blocks_args) > 0, 'block args must be greater than 0'
@@ -244,7 +244,7 @@ class EfficientNet(nn.Module):
         in_channels = 3  # rgb
         out_channels = round_filters(32, self._global_params)  # number of output channels
 
-        file = open("caffemodel/" + model_name + ".prototxt","w")
+        file = open("../caffemodel/" + typename + "/" + model_name + ".prototxt","w")
         data(file,{})
         caffe_convolution(file,"_conv_stem","data",out_channels, 3, pad = 1 , stride = 2)
         self._conv_stem = getConv2d(insize,in_channels,insize/2,out_channels,kernel_size=3, stride=2, bias=False)#Conv2dSamePadding(in_channels, out_channels, kernel_size=3, stride=2, bias=False)
@@ -330,10 +330,10 @@ class EfficientNet(nn.Module):
         x = self._fc(x)
         return x
 
-def get_from_name(model_name, override_params=None):
+def get_from_name(type_name, model_name, override_params=None):
     #cls._check_model_name_is_valid(model_name)
     blocks_args, global_params = get_model_params(model_name, override_params)
-    return EfficientNet(blocks_args, global_params,model_name)
+    return EfficientNet(blocks_args, global_params, type_name, model_name)
 
 def get_from_pretrained(model_name):
     model = EfficientNet.from_name(model_name)
