@@ -14,16 +14,16 @@
     * python3 convert_params_tf_pytorch.py --model_name efficientnet-b0 --tf_checkpoint ../pretrained_tensorflow/ckptsaug/efficientnet-b0/ --output_file ../pretrained_pytorch/ckptsaug/efficientnet-b0.pth
       * Using python3 convert_params_tf_pytorch.py -h
   * Test
-    * python test_pytorch.py ckptsaug/efficientnet-b0
+    * python test_pytorch.py ckptsaug efficientnet-b0
 
 ### PyTorch to Caffe
   * Convert pytorch-model to caffe .prototxt
     * mkdir -p ../caffemodel/ckptsaug
-    * python pytorch2caffe.py ckptsaug/efficientnet-b0
+    * python pytorch2caffe.py ckptsaug efficientnet-b0
   * Convert pytorch-model to caffe .caffemodel
-    * python pytorch2caffe_model.py ckptsaug/efficientnet-b0
+    * python pytorch2caffe_model.py ckptsaug efficientnet-b0
   * Test
-    * pytorch test_caffe.py ckptsaug/efficientnet-b0
+    * pytorch test_caffe.py ckptsaug efficientnet-b0
 
 ### data process RGB
 mean = [0.485, 0.456, 0.406]
