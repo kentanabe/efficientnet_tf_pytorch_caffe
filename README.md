@@ -1,7 +1,7 @@
 ### build
   * pip install tensorflow torch torchvision
   * pip3 install tensorflow torch torchvision
-  * git clone https://github.com/xxworkspace/caffe.git
+  * git clone https://github.com/BVLC/caffe.git
     * Then build caffe width cpu-only
 
 ### TensorFlow to PyTorch Conversion
