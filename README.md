@@ -1,6 +1,6 @@
 # EfficientNet for BVLC Caffe
 
-This is a conversion tool for EfficientNet(https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) from TensorFlow to BVLC Caffe, based on efficientnet_tf_pytorch_caffe by [xxworkspace](https://github.com/xxworkspace/efficientnet_tf_pytorch_caffe).
+This is a conversion tool for [EfficientNet](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) from TensorFlow to BVLC Caffe, based on efficientnet_tf_pytorch_caffe by [xxworkspace](https://github.com/xxworkspace/efficientnet_tf_pytorch_caffe).
 This fork uses only BVLC standard layers, instead of broadcast_Mull and Swish layers.
 
 ## Install packages
