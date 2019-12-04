@@ -1,30 +1,86 @@
-### build
-  * pip install tensorflow torch torchvision
-  * pip3 install tensorflow torch torchvision
-  * git clone https://github.com/BVLC/caffe.git
-    * Then build caffe width cpu-only
+## Install packages
 
-### TensorFlow to PyTorch Conversion
-  * Download tf-model
-    * cd pretrained_tensorflow
-    * bash download.sh ckptsaug efficientnet-b0
-  * Convert tf-model to pytorch-model
-    * cd convert_tf_pt
-    * mkdir -p ../pretrained_pytorch/ckptsaug
-    * python3 convert_params_tf_pytorch.py --model_name efficientnet-b0 --tf_checkpoint ../pretrained_tensorflow/ckptsaug/efficientnet-b0/ --output_file ../pretrained_pytorch/ckptsaug/efficientnet-b0.pth
-      * Using python3 convert_params_tf_pytorch.py -h
-  * Test
-    * python test_pytorch.py ckptsaug efficientnet-b0
+### Install pip packages
 
-### PyTorch to Caffe
-  * Convert pytorch-model to caffe .prototxt
-    * mkdir -p ../caffemodel/ckptsaug
-    * python pytorch2caffe.py ckptsaug efficientnet-b0
-  * Convert pytorch-model to caffe .caffemodel
-    * python pytorch2caffe_model.py ckptsaug efficientnet-b0
-  * Test
-    * pytorch test_caffe.py ckptsaug efficientnet-b0
+```
+pip install tensorflow torch torchvision --user
+pip3 install tensorflow torch torchvision --user
+```
 
-### data process RGB
-mean = [0.485, 0.456, 0.406]
-std = [0.229, 0.224, 0.225]
+### Install BVLC Caffe
+
+```
+sudo apt update
+sudo apt install caffe-cpu
+```
+
+## Convert models
+
+|Preprocessing         | Architecture            |Download file             |
+|----------------------|-------------------------|--------------------------|
+|Standard (ckpts)      |efficientnet-b[1-5]      |efficientnet-b[1-5]       |
+|AutoAugment (ckptsaug)|efficientnet-b[1-7]      |efficientnet-b[1-7]       |
+|RandAugment (randaug) |efficientnet-b[57]       |efficientnet-b[57]-randaug|
+|AdvProp (advprop)     |efficientnet-b[0-8]      |efficientnet-b[0-8]       |
+
+## TensorFlow to PyTorch Conversion
+
+### Download tf-model
+
+```
+pushd pretrained_tensorflow
+download.sh ckptsaug efficientnet-b0
+popd
+```
+
+### Convert tf-model to pytorch-model
+
+```
+mkdir -p pretrained_pytorch/ckptsaug
+pushd convert_tf_pt
+python3 convert_params_tf_pytorch.py \
+ --model_name efficientnet-b0 \
+ --tf_checkpoint ../pretrained_tensorflow/ckptsaug/efficientnet-b0/ \
+ --output_file ../pretrained_pytorch/ckptsaug/efficientnet-b0.pth
+popd
+```
+
+### Test PyTorch model
+
+```
+pushd convert_tf_pt
+python3 test_pytorch.py ckptsaug efficientnet-b0
+popd
+```
+
+## PyTorch to Caffe
+
+### Convert pytorch-model to caffe .prototxt
+
+```
+mkdir -p caffemodel/ckptsaug
+pushd convert_tf_pt
+python3 pytorch2caffe.py ckptsaug efficientnet-b0
+popd
+```
+
+### Convert pytorch-model to caffe .caffemodel
+
+```
+pushd
+python3 pytorch2caffe_model.py ckptsaug efficientnet-b0
+popd
+```
+
+### Test
+
+```
+pushd
+python3 test_caffe.py ckptsaug efficientnet-b0
+popd
+```
+
+## data process RGB
+
+mean = [0.485, 0.456, 0.406] x 256
+std = [0.229, 0.224, 0.225] x 256
