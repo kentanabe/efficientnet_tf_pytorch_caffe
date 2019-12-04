@@ -72,7 +72,12 @@ class MBConvBlock(nn.Module):
         self.id_skip = self.id_skip and self._block_args.stride[0] == 1 and input_filters == output_filters
 #        print(self.drop,self.id_skip)
         if self.drop and self.id_skip:
-            self.dropout = torch.nn.Dropout2d(drop_rate/bsize)
+            if 1 < drop_rate/bsize:
+                self.dropout = torch.nn.Dropout2d(1.0)
+            elif drop_rate/bsize < 0:
+                self.dropout = torch.nn.Dropout2d(0.0)
+            else:
+                self.dropout = torch.nn.Dropout2d(drop_rate/bsize)
         if self.id_skip:
             self.shortcut = AddTensor()
 

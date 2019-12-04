@@ -173,7 +173,12 @@ class MBConvBlock(nn.Module):
         self.bottom_name = bottom
         if self.drop and self.id_skip:
             caffe_dropout(caffe_attr[2],caffe_attr[0] + "._dropout",caffe_attr[0] + "._bn2",drop_rate/bsize)
-            self._dropout = torch.nn.Dropout2d(drop_rate/bsize)
+            if 1 < drop_rate/bsize:
+                self._dropout = torch.nn.Dropout2d(1.0)
+            elif drop_rate/bsize < 0:
+                self._dropout = torch.nn.Dropout2d(0.0)
+            else:
+                self._dropout = torch.nn.Dropout2d(drop_rate/bsize)
             bottom = caffe_attr[0] + "._dropout"
 
         if self.id_skip:
