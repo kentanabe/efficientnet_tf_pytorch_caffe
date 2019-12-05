@@ -245,12 +245,16 @@ class EfficientNet(nn.Module):
         bn_eps = self._global_params.batch_norm_epsilon
 
         # Stem
-        insize = 224
+        if model_name is None:
+            _, _, insize, _ = efficientnet_params('efficientnet-b0')
+        else:
+            _, _, insize, _ = efficientnet_params(model_name)
+
         in_channels = 3  # rgb
         out_channels = round_filters(32, self._global_params)  # number of output channels
 
         file = open("../caffemodel/" + typename + "/" + model_name + ".prototxt","w")
-        data(file,{})
+        data(file,{},in_channels,insize)
         caffe_convolution(file,"_conv_stem","data",out_channels, 3, pad = 1 , stride = 2)
         self._conv_stem = getConv2d(insize,in_channels,insize/2,out_channels,kernel_size=3, stride=2, bias=False)#Conv2dSamePadding(in_channels, out_channels, kernel_size=3, stride=2, bias=False)
         caffe_normalization(file,"_bn0","_conv_stem",bn_eps)

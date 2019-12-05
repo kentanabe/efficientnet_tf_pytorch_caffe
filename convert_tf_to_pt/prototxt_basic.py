@@ -3,7 +3,7 @@ import sys
 import logging
 logging.basicConfig(level = logging.INFO)
 
-def data(txt_file, info):
+def data(txt_file, info,in_channels,insize):
   txt_file.write('name: "efficientnet_pytorch2caffe"\n')
   txt_file.write('layer {\n')
   txt_file.write('  name: "data"\n')
@@ -11,7 +11,12 @@ def data(txt_file, info):
   txt_file.write('  top: "data"\n')
   txt_file.write('  input_param {\n')
   #txt_file.write('    shape: { dim: 10 dim: 3 dim: 224 dim: 224 }\n') # TODO
-  txt_file.write('    shape: { dim: 1 dim: 3 dim: 224 dim: 224 }\n') # TODO
+  txt_file.write('    shape: {\n')
+  txt_file.write('      dim: 1\n')
+  txt_file.write('      dim: %s\n' % str(in_channels))
+  txt_file.write('      dim: %s\n' % str(insize))
+  txt_file.write('      dim: %s\n' % str(insize))
+  txt_file.write('    }\n')
   txt_file.write('  }\n')
   txt_file.write('}\n')
   txt_file.write('\n')

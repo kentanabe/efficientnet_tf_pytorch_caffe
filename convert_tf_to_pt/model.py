@@ -125,7 +125,7 @@ class EfficientNet(nn.Module):
         model = EfficientNet.from_pretrained('efficientnet-b0')
 
     """
-    def __init__(self, blocks_args=None, global_params=None):
+    def __init__(self, blocks_args=None, global_params=None, model_name=None):
         super(EfficientNet,self).__init__()
         assert isinstance(blocks_args, list), 'blocks_args should be a list'
         assert len(blocks_args) > 0, 'block args must be greater than 0'
@@ -138,7 +138,11 @@ class EfficientNet(nn.Module):
         bn_eps = self._global_params.batch_norm_epsilon
 
         # Stem
-        insize = 224
+        if model_name is None:
+            _, _, insize, _ = efficientnet_params('efficientnet-b0')
+        else:
+            _, _, insize, _ = efficientnet_params(model_name)
+
         in_channels = 3  # rgb
         out_channels = round_filters(32, self._global_params)  # number of output channels
         self._conv_stem = getConv2d(insize,in_channels,insize/2,out_channels,kernel_size=3, stride=2, bias=False)#Conv2dSamePadding(in_channels, out_channels, kernel_size=3, stride=2, bias=False)
@@ -219,7 +223,7 @@ class EfficientNet(nn.Module):
 def get_from_name(model_name, override_params=None):
     #cls._check_model_name_is_valid(model_name)
     blocks_args, global_params = get_model_params(model_name, override_params)
-    return EfficientNet(blocks_args, global_params)
+    return EfficientNet(blocks_args, global_params, model_name)
 
 def get_from_pretrained(type_name, model_name, model_path):
     model = get_from_name(model_name)
