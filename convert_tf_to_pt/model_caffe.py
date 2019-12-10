@@ -6,6 +6,7 @@ from torch.nn import functional as F
 
 from utils import *
 from prototxt_basic import *
+import numpy as np
 
 def caffe_active(ofs,top,bottom,type):
   attr = {}
@@ -32,18 +33,32 @@ def caffe_global_avg_pool(ofs,top,bottom):
   attr["attrs"]["global_pool"] = "True"
   Pooling_global(ofs,attr)
 
-def caffe_convolution(ofs,top,bottom,num_filter,kernel = 1,pad = 0,stride=1,bias=False,group = 1):
-  attr = {}
-  attr["top"] = top
-  attr["bottom"] = [bottom]
-  attr["attrs"] = {}
-  attr["attrs"]["num_filter"] = str(num_filter)
-  attr["attrs"]["kernel"] = "(" + str(kernel) + ",)"
-  attr["attrs"]["pad"] = "(" + str(pad) + ",)"
-  attr["attrs"]["stride"] = "(" + str(stride) + ",)"
-  attr["attrs"]["num_group"] = str(group)
-  attr["attrs"]["no_bias"] = str(not bias)
-  Convolution(ofs,attr)
+def caffe_convolution(ofs,top,bottom,num_filter,kernel = 1,pad = 0,stride=1,bias=False,group = 1, out_size=1):
+  if stride == 2 and pad > 0:
+    attr = {}
+    attr["top"] = top
+    attr["bottom"] = [bottom]
+    attr["attrs"] = {}
+    attr["attrs"]["num_filter"] = str(num_filter)
+    attr["attrs"]["kernel"] = "(" + str(kernel) + ",)"
+    attr["attrs"]["pad"] = "(" + str(np.floor(pad) + 1) + ",)"
+    attr["attrs"]["stride"] = "(" + str(stride) + ",)"
+    attr["attrs"]["num_group"] = str(group)
+    attr["attrs"]["no_bias"] = str(not bias)
+    attr["attrs"]["out_size"] = str(int(out_size))
+    return Convolution3(ofs,attr)
+  else:
+    attr = {}
+    attr["top"] = top
+    attr["bottom"] = [bottom]
+    attr["attrs"] = {}
+    attr["attrs"]["num_filter"] = str(num_filter)
+    attr["attrs"]["kernel"] = "(" + str(kernel) + ",)"
+    attr["attrs"]["pad"] = "(" + str(pad) + ",)"
+    attr["attrs"]["stride"] = "(" + str(stride) + ",)"
+    attr["attrs"]["num_group"] = str(group)
+    attr["attrs"]["no_bias"] = str(not bias)
+    return Convolution(ofs,attr)
 
 def caffe_BroadcastMul(ofs,top,bottom):
   attr = {}
@@ -107,10 +122,10 @@ class MBConvBlock(nn.Module):
         oup = self._block_args.input_filters * self._block_args.expand_ratio  # number of output channels
         bsize = 6.0
         if self._block_args.expand_ratio != 1:
-            caffe_convolution(caffe_attr[2],caffe_attr[0] + "._expand_conv",caffe_attr[1],oup)
+            conv_top = caffe_convolution(caffe_attr[2],caffe_attr[0] + "._expand_conv",caffe_attr[1],oup, out_size=outsize)
             self._expand_conv = getConv2d(in_size = insize, in_channels=inp,out_size = outsize, out_channels=oup,kernel_size = 1,bias = False)
             #self._expand_conv = Conv2dSamePadding(in_channels=inp, out_channels=oup, kernel_size=1, bias=False)
-            caffe_normalization(caffe_attr[2],caffe_attr[0] + "._bn0",caffe_attr[0] + "._expand_conv",self._bn_eps)
+            caffe_normalization(caffe_attr[2],caffe_attr[0] + "._bn0", conv_top, self._bn_eps)
             self._bn0 = nn.BatchNorm2d(num_features=oup, momentum=self._bn_mom, eps=self._bn_eps)
             caffe_active(caffe_attr[2],caffe_attr[0] + "._swish0",caffe_attr[0] + "._bn0","swish")
             self._swish0 = Swish()
@@ -126,9 +141,9 @@ class MBConvBlock(nn.Module):
         else:
             bottom = caffe_attr[0] + "._swish0"
 
-        caffe_convolution(caffe_attr[2],caffe_attr[0] + "._depthwise_conv",bottom,oup,k,pad = k/2,stride = s[0],group = oup)
+        conv_top = caffe_convolution(caffe_attr[2],caffe_attr[0] + "._depthwise_conv",bottom,oup,k,pad = k/2,stride = s[0],group = oup, out_size=outsize)
         self._depthwise_conv = getConv2d(in_size = insize,in_channels=oup,out_size = outsize,out_channels=oup,groups=oup,kernel_size=k, stride=s[0], bias=False)
-        caffe_normalization(caffe_attr[2],caffe_attr[0] + "._bn1",caffe_attr[0] + "._depthwise_conv",self._bn_eps)
+        caffe_normalization(caffe_attr[2],caffe_attr[0] + "._bn1", conv_top, self._bn_eps)
         self._bn1 = nn.BatchNorm2d(num_features=oup, momentum=self._bn_mom, eps=self._bn_eps)
 
         caffe_active(caffe_attr[2],caffe_attr[0] + "._swish1",caffe_attr[0] + "._bn1","swish")
@@ -138,13 +153,13 @@ class MBConvBlock(nn.Module):
             num_squeezed_channels = max(1, int(self._block_args.input_filters * self._block_args.se_ratio))
             caffe_global_avg_pool(caffe_attr[2],caffe_attr[0] + "._global_avg_pool",caffe_attr[0] + "._swish1")
             self._global_avg_pool = torch.nn.AdaptiveAvgPool2d(1)
-            caffe_convolution(caffe_attr[2],caffe_attr[0] + "._se_reduce",caffe_attr[0] + "._global_avg_pool",num_squeezed_channels,bias=True)
+            conv_top = caffe_convolution(caffe_attr[2],caffe_attr[0] + "._se_reduce",caffe_attr[0] + "._global_avg_pool",num_squeezed_channels,bias=True, out_size=1)
             self._se_reduce = getConv2d(in_size = 1,in_channels=oup,out_size = 1,out_channels=num_squeezed_channels, kernel_size=1)
-            caffe_active(caffe_attr[2],caffe_attr[0] + "._swish2",caffe_attr[0] + "._se_reduce","swish")
+            caffe_active(caffe_attr[2],caffe_attr[0] + "._swish2", conv_top,"swish")
             self._swish2 = Swish()
-            caffe_convolution(caffe_attr[2],caffe_attr[0] + "._se_expand",caffe_attr[0] + "._swish2",oup,bias=True)
+            conv_top = caffe_convolution(caffe_attr[2],caffe_attr[0] + "._se_expand",caffe_attr[0] + "._swish2",oup,bias=True, out_size=1)
             self._se_expand = getConv2d(in_size = 1,in_channels=num_squeezed_channels,out_size = 1,out_channels=oup, kernel_size=1) 
-            caffe_active(caffe_attr[2],caffe_attr[0] + "._sigmoid",caffe_attr[0] + "._se_expand","sigmoid")
+            caffe_active(caffe_attr[2],caffe_attr[0] + "._sigmoid", conv_top,"sigmoid")
             self._sigmoid = torch.nn.Sigmoid()
 			
             caffe_BroadcastMul(caffe_attr[2],caffe_attr[0] + "._broadcast_mul",[caffe_attr[0] + "._swish1",caffe_attr[0] + "._sigmoid"])
@@ -159,10 +174,10 @@ class MBConvBlock(nn.Module):
         else:
             bottom = caffe_attr[0] + "._swish1"
 
-        caffe_convolution(caffe_attr[2],caffe_attr[0] + "._project_conv",bottom,final_oup)
+        conv_top = caffe_convolution(caffe_attr[2],caffe_attr[0] + "._project_conv",bottom,final_oup, out_size=outsize)
         self._project_conv = getConv2d(in_size = outsize,in_channels=oup,out_size = outsize,out_channels=final_oup, kernel_size=1, bias = False)
         #self._project_conv = Conv2dSamePadding(in_channels=oup, out_channels=final_oup, kernel_size=1, bias=False)
-        caffe_normalization(caffe_attr[2],caffe_attr[0] + "._bn2",caffe_attr[0] + "._project_conv",self._bn_eps)
+        caffe_normalization(caffe_attr[2],caffe_attr[0] + "._bn2",conv_top,self._bn_eps)
         self._bn2 = nn.BatchNorm2d(num_features=final_oup, momentum=self._bn_mom, eps=self._bn_eps)
 
         input_filters, output_filters = self._block_args.input_filters, self._block_args.output_filters
@@ -255,9 +270,9 @@ class EfficientNet(nn.Module):
 
         file = open("../caffemodel/" + typename + "/" + model_name + ".prototxt","w")
         data(file,{},in_channels,insize)
-        caffe_convolution(file,"_conv_stem","data",out_channels, 3, pad = 1 , stride = 2)
+        conv_top = caffe_convolution(file,"_conv_stem","data",out_channels, 3, pad = 1 , stride = 2, out_size=insize/2)
         self._conv_stem = getConv2d(insize,in_channels,insize/2,out_channels,kernel_size=3, stride=2, bias=False)#Conv2dSamePadding(in_channels, out_channels, kernel_size=3, stride=2, bias=False)
-        caffe_normalization(file,"_bn0","_conv_stem",bn_eps)
+        caffe_normalization(file,"_bn0",conv_top,bn_eps)
         self._bn0 = nn.BatchNorm2d(num_features=out_channels, momentum=bn_mom, eps=bn_eps)
         caffe_active(file,"_swish0","_bn0","swish")
         self._swish0 = Swish()
@@ -295,9 +310,9 @@ class EfficientNet(nn.Module):
         # Head
         in_channels = block_args.output_filters  # output of final block
         out_channels = round_filters(1280, self._global_params)
-        caffe_convolution(file,"_conv_head",last,out_channels)
+        conv_top = caffe_convolution(file,"_conv_head",last,out_channels, out_size=insize)
         self._conv_head = getConv2d(insize,in_channels,insize,out_channels,kernel_size=1, bias=False)#Conv2dSamePadding(in_channels, out_channels, kernel_size=1, bias=False)
-        caffe_normalization(file,"_bn1","_conv_head",bn_eps)
+        caffe_normalization(file,"_bn1",conv_top,bn_eps)
         self._bn1 = nn.BatchNorm2d(num_features=out_channels, momentum=bn_mom, eps=bn_eps)
         caffe_active(file,"_swish1","_bn1","swish")
         self._swish1 = Swish()

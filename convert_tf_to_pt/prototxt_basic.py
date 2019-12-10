@@ -53,6 +53,72 @@ def DropOut(txt_file, info):
   txt_file.write('}\n')
   txt_file.write('\n')
 
+def Convolution3(txt_file, info):
+  if info['attrs']['no_bias'] == 'True':
+    bias_term = 'false'
+  else:
+    bias_term = 'true'  
+  txt_file.write('layer {\n')
+  txt_file.write('  bottom: "%s"\n'       % info['bottom'][0])
+  txt_file.write('  top: "%s"\n'          % info['top'])
+  txt_file.write('  name: "%s"\n'         % info['top'])
+  txt_file.write('  type: "Convolution"\n')
+  txt_file.write('  convolution_param {\n')
+  txt_file.write('    num_output: %s\n'   % info['attrs']['num_filter'])
+  txt_file.write('    kernel_size: %s\n'  % info['attrs']['kernel'].split('(')[1].split(',')[0]) # TODO
+  if 'pad' not in info['attrs']:
+    logging.info('miss Conv_pad, make pad default: 0 ')
+    txt_file.write('    pad: %s\n' % 0)  # TODO
+  else:
+    #print(info['attrs']['pad'])
+    pad = int(float(info['attrs']['pad'].split('(')[1].split(',')[0]))
+    txt_file.write('    pad: %s\n'        % pad) # TODO
+
+  if "num_group" in info['attrs']:
+    txt_file.write('    group: %s\n'        % info['attrs']['num_group'])
+
+  txt_file.write('    stride: %s\n'       % info['attrs']['stride'].split('(')[1].split(',')[0])
+  txt_file.write('    bias_term: %s\n'    % bias_term)
+  txt_file.write('  }\n')
+
+  if 'share' in info.keys() and info['share']: 
+    print("Log -> ",info['top'],info['share'])  
+    txt_file.write('    param {\n')
+    txt_file.write('      name: "%s"\n'     % info['params'][0])
+    txt_file.write('    }\n')
+  txt_file.write('}\n')
+  txt_file.write('\n')
+
+  txt_file.write('layer {\n')
+  txt_file.write('  top: "%s"\n'          % (info['top'] + "_dummy"))
+  txt_file.write('  name: "%s"\n'         % (info['top'] + "_dummy"))
+  txt_file.write('  type: "DummyData"\n')
+  txt_file.write('  dummy_data_param {\n')
+  txt_file.write('    shape: {\n')
+  txt_file.write('      dim: 1\n')
+  txt_file.write('      dim: 1\n')
+  txt_file.write('      dim: %s\n' % info['attrs']['out_size'])
+  txt_file.write('      dim: %s\n' % info['attrs']['out_size'])
+  txt_file.write('    }\n')
+  txt_file.write('  }\n')
+  txt_file.write('}\n')
+
+
+  txt_file.write('layer {\n')
+  txt_file.write('  name: "%s"\n'         % (info['top'] + "_crop"))
+  txt_file.write('  type: "Crop"\n')
+  txt_file.write('  bottom: "%s"\n'     % info['top'])
+  txt_file.write('  bottom: "%s"\n'     % (info['top'] + "_dummy"))
+  txt_file.write('  top: "%s"\n'          % (info['top'] + "_crop"))
+  txt_file.write('  crop_param {\n')
+  txt_file.write('    axis: 2\n')
+  txt_file.write('    offset: 1\n')
+  txt_file.write('    offset: 1\n')
+  txt_file.write('  }\n')
+  txt_file.write('}\n')
+  txt_file.write('\n')  
+  return info['top'] + '_crop'
+
 def Convolution(txt_file, info):
   if info['attrs']['no_bias'] == 'True':
     bias_term = 'false'
@@ -88,6 +154,7 @@ def Convolution(txt_file, info):
     txt_file.write('    }\n')
   txt_file.write('}\n')
   txt_file.write('\n')
+  return info['top']
 
 def ChannelwiseConvolution(txt_file, info):
   Convolution(txt_file, info)
