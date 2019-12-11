@@ -89,3 +89,15 @@ popd
 
 * mean = [0.485, 0.456, 0.406] x 255
 * std = [0.229, 0.224, 0.225] x 255
+
+## Correspondence table of conversion
+
+| Input size | Tensorflow layer                             | Caffe layers                                                                                                                  |
+|------------|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| Odd        |conv2d (kernel_size: 2, stride: 2, pad: same) | Convolution (kernel_size: 2, stride: 2, pad: 1)                                                                               |
+| Even       |conv2d (kernel_size: 2, stride: 2, pad: same) | Convolution (kernel_size: 2, stride: 2, pad: 2) + <br> Convolution (kernel_size: 2, stride: 2, pad: 1) + <br> Crop (offset: 1)|
+| ---------- |depthwise_conv2d                              | Convolution (group=num_output)                                                                                                |
+| ---------- |Swish                                         | Sigmoid + Eltwise (operation: PROD)                                                                                           |
+| ---------- |broadcast_mul                                 | Scale (with 2 bottom blobs)                                                                                                   |
+
+
