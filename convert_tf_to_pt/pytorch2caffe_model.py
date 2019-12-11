@@ -6,7 +6,7 @@ import numpy as np
 from torch.utils import model_zoo
 
 if not len(sys.argv) == 3:
-  sys.exit("too less argc : model name is needed! -> efficientnet-b0/efficientnet-b1/efficientnet-b2/efficientnet-b3")
+  sys.exit("too less argc : preprocess type name and model name are needed! -> [ckpts/ckptsaug/randaug/advprop] [efficientnet-b[0-8]]")
 
 type_name = sys.argv[1]
 model_name = sys.argv[2]

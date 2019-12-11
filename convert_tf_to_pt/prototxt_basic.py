@@ -88,7 +88,7 @@ def Convolution3(txt_file, info):
     txt_file.write('    }\n')
   txt_file.write('}\n')
   txt_file.write('\n')
-
+  """
   txt_file.write('layer {\n')
   txt_file.write('  top: "%s"\n'          % (info['top'] + "_dummy"))
   txt_file.write('  name: "%s"\n'         % (info['top'] + "_dummy"))
@@ -96,13 +96,30 @@ def Convolution3(txt_file, info):
   txt_file.write('  dummy_data_param {\n')
   txt_file.write('    shape: {\n')
   txt_file.write('      dim: 1\n')
-  txt_file.write('      dim: 1\n')
-  txt_file.write('      dim: %s\n' % info['attrs']['out_size'])
-  txt_file.write('      dim: %s\n' % info['attrs']['out_size'])
+  txt_file.write('      dim: %s\n'        % info['attrs']['num_filter'])
+  txt_file.write('      dim: %s\n'        % info['attrs']['out_size'])
+  txt_file.write('      dim: %s\n'        % info['attrs']['out_size'])
   txt_file.write('    }\n')
   txt_file.write('  }\n')
   txt_file.write('}\n')
-
+  """
+  bias_term = 'false'
+  txt_file.write('layer {\n')
+  txt_file.write('  bottom: "%s"\n'       % info['bottom'][0])
+  txt_file.write('  top: "%s"\n'          % (info['top'] + "_dummy"))
+  txt_file.write('  name: "%s"\n'         % (info['top'] + "_dummy"))
+  txt_file.write('  type: "Convolution"\n')
+  txt_file.write('  convolution_param {\n')
+  txt_file.write('    num_output: 1\n')
+  txt_file.write('    kernel_size: %s\n'  % info['attrs']['kernel'].split('(')[1].split(',')[0]) # TODO
+  org_pad = int(float(info['attrs']['org_pad'].split('(')[1].split(',')[0]))
+  txt_file.write('    pad: %s\n'        % org_pad)
+  txt_file.write('    group: 1\n')
+  txt_file.write('    stride: %s\n'       % info['attrs']['stride'].split('(')[1].split(',')[0])
+  txt_file.write('    bias_term: %s\n'    % bias_term)
+  txt_file.write('  }\n')
+  txt_file.write('}\n')
+  txt_file.write('\n')
 
   txt_file.write('layer {\n')
   txt_file.write('  name: "%s"\n'         % (info['top'] + "_crop"))
