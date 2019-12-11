@@ -97,7 +97,14 @@ popd
 | Odd        |conv2d (kernel_size: 2, stride: 2, pad: same) | Convolution (kernel_size: 2, stride: 2, pad: 1)                                                                               |
 | Even       |conv2d (kernel_size: 2, stride: 2, pad: same) | Convolution (kernel_size: 2, stride: 2, pad: 2) + <br> Convolution (kernel_size: 2, stride: 2, pad: 1) + <br> Crop (offset: 1)|
 | ---------- |depthwise_conv2d                              | Convolution (group=num_output)                                                                                                |
-| ---------- |Swish                                         | Sigmoid + Eltwise (operation: PROD)                                                                                           |
-| ---------- |broadcast_mul                                 | Scale (with 2 bottom blobs)                                                                                                   |
+| ---------- |swish                                         | Sigmoid + Eltwise (operation: PROD)                                                                                           |
+| ---------- |broadcast_mul                                 | Flatten + Scale (with 2 bottom blobs)                                                                                         |
 
+## Result of conversion
+
+### efficientnet-b0 on Netscope
+
+https://kentanabe.github.io/netscope/#/preset/efficientnet-b0
+
+![efficientnet-b0.block1](efficientnet-b0.block1.png)
 
