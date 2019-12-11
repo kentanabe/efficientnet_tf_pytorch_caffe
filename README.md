@@ -72,7 +72,7 @@ popd
 ### Convert pytorch-model to caffe .caffemodel
 
 ```
-pushd
+pushd convert_tf_pt
 python3 pytorch2caffe_model.py ckptsaug efficientnet-b0
 popd
 ```
@@ -80,7 +80,7 @@ popd
 ### Test
 
 ```
-pushd
+pushd convert_tf_pt
 python3 test_caffe.py ckptsaug efficientnet-b0
 popd
 ```
